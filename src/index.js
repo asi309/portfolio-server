@@ -1,6 +1,8 @@
 const express = require('express');
 const nodemailer = require('nodemailer');
 const cors = require('cors');
+const fs = require('fs');
+const path = require('path');
 
 const app = express();
 
@@ -47,6 +49,16 @@ app.post('/submit', (req, res) => {
   });
 
   transport.close();
+});
+
+app.get('/resume', (req, res) => {
+  fs.readFile(path.join(__dirname, 'assets', 'resume.pdf'), (err, data) => {
+    if (err) {
+      return res.sendStatus(500);
+    }
+    res.setHeader('Content-Type', 'application/pdf');
+    res.send(data);
+  });
 });
 
 app.listen(PORT, () => {
