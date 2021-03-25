@@ -1,8 +1,11 @@
 const express = require('express');
+const mongoose = require('mongoose');
 const nodemailer = require('nodemailer');
 const cors = require('cors');
 const fs = require('fs');
 const path = require('path');
+
+const Project = require('./models/Project');
 
 const app = express();
 
@@ -10,6 +13,17 @@ const PORT = process.env.PORT || 8000;
 
 if (process.env.NODE_ENV !== 'production') {
   require('dotenv').config();
+}
+
+try {
+  mongoose.connect(process.env.MONGO_DB_CONNECTION, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+    useFindAndModify: false,
+  });
+  console.log('DB connected successfully');
+} catch (error) {
+  console.log(error);
 }
 
 app.use(cors());
@@ -26,6 +40,10 @@ app.post('/submit', (req, res) => {
   });
 
   const { name, email, message } = req.body;
+
+  if (!name || !email || !message) {
+    return res.status(400).send();
+  }
 
   const content = `Name: ${name}\nEmail: ${email}\nMessage: ${message}`;
 
@@ -58,6 +76,21 @@ app.get('/resume', (req, res) => {
     }
     res.setHeader('Content-Type', 'application/pdf');
     res.send(data);
+  });
+});
+
+app.get('/projects', async (req, res) => {
+  const projects = await Project.find({});
+
+  if (projects.length === 0) {
+    return res.status(200).json({
+      message: 'Nothing to show here',
+    });
+  }
+
+  return res.status(200).json({
+    message: 'Found!',
+    projects,
   });
 });
 
